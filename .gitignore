@@ -1,0 +1,13 @@
+main
+*.o
+*.obj
+*.dSYM/
+bench/*.csv
+!bench/.gitkeep
+data/*.csv
+!data/.gitkeep
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
