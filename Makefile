@@ -16,4 +16,4 @@ clean:
 	rm -f bench/*.csv
 
 valgrind: $(TARGET)
-	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./$(TARGET) -i data/small.csv
+	valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./$(TARGET) -q 47 -c all data/small.csv
