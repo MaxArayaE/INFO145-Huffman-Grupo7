@@ -1,6 +1,6 @@
 # INFO145 Huffman -- Grupo 7
 
-Proyecto semestral del ramo INFO145 *Diseño y Análisis de Algoritmos* (Prof. Héctor Ferrada, UACh, primer semestre 2026). Implementa y compara tres representaciones de arreglos ordenados de gran magnitud:
+Proyecto semestral del ramo INFO145 *Diseño y Análisis de Algoritmos*. Implementa y compara tres representaciones de arreglos ordenados de gran magnitud:
 
 1. **Caso 1**: representación explícita (línea base, búsqueda binaria).
 2. **Caso 2**: Gap-Coding con índice de muestreo (Sample).
