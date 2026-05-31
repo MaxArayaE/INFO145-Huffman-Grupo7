@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <vector>
 
 #include "bitstream.hpp"
@@ -15,13 +18,83 @@ namespace huffman {
 class HuffmanCompressedArray {
 public:
     void build(const std::vector<Elem>& sorted_input) {
-        // TODO
-        (void)sorted_input;
+        bits_.clear();
+        block_offsets_.clear();
+        Sample_.clear();
+        n_ = sorted_input.size();
+        if (n_ == 0) { m_ = 0; b_ = 0; return; }
+
+        m_ = static_cast<std::size_t>(
+                std::ceil(std::sqrt(static_cast<double>(n_))));
+        if (m_ > n_) m_ = n_;
+        b_ = (n_ + m_ - 1) / m_;
+
+        Sample_.reserve(m_);
+        for (std::size_t k = 0; k < m_; ++k) {
+            Sample_.push_back(sorted_input[k * b_]);
+        }
+
+        // Recolectar gaps internos (los inter-bloque NO se encodean: el sample los tiene).
+        std::vector<Elem> gaps;
+        gaps.reserve(n_ > m_ ? n_ - m_ : 0);
+        for (std::size_t k = 0; k < m_; ++k) {
+            std::size_t L = k * b_;
+            std::size_t R = std::min(L + b_, n_);
+            for (std::size_t i = L + 1; i < R; ++i) {
+                gaps.push_back(sorted_input[i] - sorted_input[i - 1]);
+            }
+        }
+
+        huffman_.build(gaps);
+
+        // Encodear bloque por bloque, registrando offsets
+        block_offsets_.resize(m_);
+        BitWriter writer(bits_);
+        std::size_t gap_idx = 0;
+        for (std::size_t k = 0; k < m_; ++k) {
+            block_offsets_[k] = writer.bits_written();
+            std::size_t L = k * b_;
+            std::size_t R = std::min(L + b_, n_);
+            for (std::size_t i = L + 1; i < R; ++i) {
+                Elem g = gaps[gap_idx++];
+                auto it = huffman_.sym_to_idx.find(g);
+                std::uint32_t idx = it->second;
+                writer.write(huffman_.codes[idx], huffman_.code_len[idx]);
+            }
+        }
+        // Padding: decode_one lee h_max bits adelante; aseguramos un word extra de ceros.
+        bits_.push_back(0ULL);
     }
 
     long search(Elem value) const {
-        // TODO
-        (void)value;
+        if (n_ == 0) return -1;
+
+        auto lo = std::lower_bound(Sample_.begin(), Sample_.end(), value);
+        std::size_t k = static_cast<std::size_t>(
+                std::distance(Sample_.begin(), lo));
+
+        if (k == 0) {
+            return (Sample_[0] == value) ? 0L : -1L;
+        }
+
+        std::size_t L = (k - 1) * b_;
+        std::size_t R = std::min(L + b_, n_);
+
+        Elem acc = Sample_[k - 1];
+        if (acc == value) return static_cast<long>(L);
+
+        BitReader br(bits_.data());
+        std::size_t pos = block_offsets_[k - 1];
+
+        for (std::size_t i = L + 1; i < R; ++i) {
+            auto [gap, len] = huffman_.decode_one(br, pos);
+            pos += len;
+            acc += gap;
+            if (acc == value) return static_cast<long>(i);
+            if (acc > value)  return -1;
+        }
+
+        if (k < m_ && Sample_[k] == value) return static_cast<long>(k * b_);
         return -1;
     }
 
