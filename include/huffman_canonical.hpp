@@ -27,15 +27,16 @@ struct HuffmanCanonical {
     std::unordered_map<Elem, std::uint32_t> sym_to_idx;
 
     void build(const std::vector<Elem>& sequence) {
-        symbols.clear(); codes.clear(); code_len.clear();
-        F.clear(); C.clear(); sym_to_idx.clear();
-        h_min = h_max = 0;
-        if (sequence.empty()) return;
-
-        // Frecuencias
+        if (sequence.empty()) { reset(); return; }
         std::unordered_map<Elem, std::uint64_t> freq;
-        freq.reserve(sequence.size() / 4);
+        freq.reserve(sequence.size() / 4 + 1);
         for (Elem s : sequence) ++freq[s];
+        build_from_freq(freq);
+    }
+
+    void build_from_freq(const std::unordered_map<Elem, std::uint64_t>& freq) {
+        reset();
+        if (freq.empty()) return;
 
         // Construir árbol con min-heap. Tie-breaking determinista por índice.
         struct Node { std::uint64_t f; std::int32_t left; std::int32_t right; Elem sym; };
@@ -135,6 +136,14 @@ struct HuffmanCanonical {
         }
     }
 
+private:
+    void reset() {
+        symbols.clear(); codes.clear(); code_len.clear();
+        F.clear(); C.clear(); sym_to_idx.clear();
+        h_min = h_max = 0;
+    }
+
+public:
     // Devuelve (símbolo, bits consumidos).
     std::pair<Elem, std::uint32_t> decode_one(const BitReader& br, std::size_t pos) const {
         std::uint64_t N = br.read(pos, h_max);

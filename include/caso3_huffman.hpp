@@ -34,29 +34,28 @@ public:
             Sample_.push_back(sorted_input[k * b_]);
         }
 
-        // Recolectar gaps internos (los inter-bloque NO se encodean: el sample los tiene).
-        std::vector<Elem> gaps;
-        gaps.reserve(n_ > m_ ? n_ - m_ : 0);
+        // Pasada 1: contar frecuencias de gaps internos a cada bloque.
+        std::unordered_map<Elem, std::uint64_t> freq;
+        freq.reserve(n_ / 16 + 1);
         for (std::size_t k = 0; k < m_; ++k) {
             std::size_t L = k * b_;
             std::size_t R = std::min(L + b_, n_);
             for (std::size_t i = L + 1; i < R; ++i) {
-                gaps.push_back(sorted_input[i] - sorted_input[i - 1]);
+                ++freq[sorted_input[i] - sorted_input[i - 1]];
             }
         }
 
-        huffman_.build(gaps);
+        huffman_.build_from_freq(freq);
 
-        // Encodear bloque por bloque, registrando offsets
+        // Pasada 2: encodear bloque por bloque, registrando offsets.
         block_offsets_.resize(m_);
         BitWriter writer(bits_);
-        std::size_t gap_idx = 0;
         for (std::size_t k = 0; k < m_; ++k) {
             block_offsets_[k] = writer.bits_written();
             std::size_t L = k * b_;
             std::size_t R = std::min(L + b_, n_);
             for (std::size_t i = L + 1; i < R; ++i) {
-                Elem g = gaps[gap_idx++];
+                Elem g = sorted_input[i] - sorted_input[i - 1];
                 auto it = huffman_.sym_to_idx.find(g);
                 std::uint32_t idx = it->second;
                 writer.write(huffman_.codes[idx], huffman_.code_len[idx]);

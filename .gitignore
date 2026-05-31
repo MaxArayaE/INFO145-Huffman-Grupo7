@@ -6,6 +6,7 @@ bench/*.csv
 !bench/.gitkeep
 data/*.csv
 !data/.gitkeep
+!data/small.csv
 .vscode/
 .idea/
 *.swp

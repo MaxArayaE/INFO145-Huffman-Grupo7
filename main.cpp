@@ -109,7 +109,7 @@ void write_csv(const std::vector<BenchmarkResult>& results, const std::string& p
 }
 
 int run_benchmark() {
-    const std::vector<std::size_t> sizes = {1'000'000, 10'000'000};
+    const std::vector<std::size_t> sizes = {1'000'000, 10'000'000, 100'000'000};
     const double mu = static_cast<double>(std::numeric_limits<Elem>::max()) / 2.0;
     const std::vector<double> sigma_factors = {0.05, 0.15, 0.5};
 
