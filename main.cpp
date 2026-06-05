@@ -159,7 +159,7 @@ int run_benchmark() {
     (void)std::system("mkdir -p bench");
     write_csv(results, "bench/results.csv");
     std::fprintf(stderr,
-                 "[benchmark] %zu filas escritas. Caso 2/3 = 0 bytes hasta que se implementen.\n",
+                 "[benchmark] %zu filas escritas correctamente en bench/results.csv.\n",
                  results.size());
     return 0;
 }
